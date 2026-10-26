@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Library</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .lib { max-width: 900px; margin: 30px auto; padding: 0 16px; }
+    .lib table { width: 100%; border-collapse: collapse; margin: 12px 0 24px; }
+    .lib th, .lib td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: middle; }
+    .lib th { background: #f0f0f0; }
+    .lib form.inline { display: inline; }
+    .lib .add-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 24px; }
+    .lib .errors { color: #b00020; background: #fdecea; padding: 10px 24px; border-radius: 6px; }
+    .lib .empty { color: #777; }
+    .lib img.thumb { height: 70px; width: auto; max-width: 70px; object-fit: cover; border-radius: 4px; display: block; }
+  </style>
+</head>
+<body>
+<div class="lib">
+  <h1>Library</h1>
+
+  {% if errors %}
+  <ul class="errors">
+    {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+
+  <!-- ===================== Books ===================== -->
+  <h2>Books</h2>
+  <table>
+    <tr><th>Cover</th><th>book_id</th><th>Title</th><th>Price</th><th>author_id</th><th>Actions</th></tr>
+    {% for b in books %}
+    {% set cover = image_url('books', b.book_id) %}
+    <tr>
+      <td>
+        {% if cover %}<img class="thumb" src="{{ cover }}" alt="Cover of {{ b.title }}">
+        {% else %}<span class="empty">-</span>{% endif %}
+      </td>
+      <td>{{ b.book_id }}</td>
+      <td>{{ b.title }}</td>
+      <td>{{ b.price }}</td>
+      <td>{{ b.author_id }}</td>
+      <td>
+        <a href="/books/{{ b.book_id }}/edit">Edit</a>
+        <form class="inline" method="post" action="/books/{{ b.book_id }}/delete"
+              onsubmit="return confirm('Delete this book?');">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">No books yet.</td></tr>
+    {% endfor %}
+  </table>
+
+  <h3>Add a book</h3>
+  {% if authors %}
+  <form class="add-form" method="post" action="/books/add" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Title" value="{{ form.book_title or '' }}" required>
+    <input type="text" name="price" placeholder="Price (e.g. 120.50)" value="{{ form.book_price or '' }}" required>
+    <select name="author_id" required>
+      <option value="">-- Author --</option>
+      {% for a in authors %}
+      <option value="{{ a.author_id }}" {% if form.book_author_id == a.author_id|string %}selected{% endif %}>
+        {{ a.author_id }} - {{ a.name }}
+      </option>
+      {% endfor %}
+    </select>
+    <label>Cover: <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp"></label>
+    <button type="submit">Add book</button>
+  </form>
+  {% else %}
+  <p class="empty">Add an author first, then you can add books.</p>
+  {% endif %}
+
+  <!-- ===================== Authors ===================== -->
+  <h2>Authors</h2>
+  <table>
+    <tr><th>Photo</th><th>author_id</th><th>Name</th><th>Country</th><th>Actions</th></tr>
+    {% for a in authors %}
+    {% set photo = image_url('authors', a.author_id) %}
+    <tr>
+      <td>
+        {% if photo %}<img class="thumb" src="{{ photo }}" alt="Photo of {{ a.name }}">
+        {% else %}<span class="empty">-</span>{% endif %}
+      </td>
+      <td>{{ a.author_id }}</td>
+      <td>{{ a.name }}</td>
+      <td>{{ a.country or '' }}</td>
+      <td>
+        <a href="/authors/{{ a.author_id }}/edit">Edit</a>
+        <form class="inline" method="post" action="/authors/{{ a.author_id }}/delete"
+              onsubmit="return confirm('Delete this author AND all of his/her books?');">
+          <button type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="empty">No authors yet.</td></tr>
+    {% endfor %}
+  </table>
+
+  <h3>Add an author</h3>
+  <form class="add-form" method="post" action="/authors/add" enctype="multipart/form-data">
+    <input type="text" name="name" placeholder="Name" value="{{ form.author_name or '' }}" required>
+    <input type="text" name="country" placeholder="Country" value="{{ form.author_country or '' }}">
+    <label>Photo: <input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp"></label>
+    <button type="submit">Add author</button>
+  </form>
+</div>
+</body>
+</html>
